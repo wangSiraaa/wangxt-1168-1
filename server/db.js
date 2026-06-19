@@ -54,7 +54,11 @@ function updateRows(table, filter, updates) {
 
 function initDB() {
     load();
-    ['generator_unit', 'drill_plan', 'load_switch_record', 'fuel_level_record', 'recovery_record', 'system_config'].forEach(ensure);
+    [
+        'generator_unit', 'drill_plan', 'load_switch_record', 'fuel_level_record',
+        'recovery_record', 'system_config', 'alarm_record',
+        'non_compliance_item', 'review_todo', 'load_curve_point'
+    ].forEach(ensure);
     if (_db.generator_unit.length === 0) {
         insertRow('generator_unit', { unit_code: 'GEN-001', unit_name: '1号柴油发电机组', capacity_kw: 800, fuel_tank_capacity_l: 5000, status: 'normal' });
         insertRow('generator_unit', { unit_code: 'GEN-002', unit_name: '2号柴油发电机组', capacity_kw: 1000, fuel_tank_capacity_l: 6000, status: 'normal' });
@@ -63,6 +67,8 @@ function initDB() {
     if (_db.system_config.length === 0) {
         insertRow('system_config', { config_key: 'ups_margin_threshold', config_value: '30', description: 'UPS余量阈值(%)', updated_at: now() });
         insertRow('system_config', { config_key: 'fuel_level_threshold', config_value: '20', description: '油位阈值(%)', updated_at: now() });
+        insertRow('system_config', { config_key: 'load_deviation_threshold', config_value: '10', description: '负载偏差阈值(%)', updated_at: now() });
+        insertRow('system_config', { config_key: 'switch_time_target_min', config_value: '5', description: '切换时间目标(分钟)', updated_at: now() });
     }
     save();
 }
@@ -76,16 +82,38 @@ function enrichDrillPlan(p) {
         unit_name: unit?.unit_name,
         capacity_kw: unit?.capacity_kw,
         fuel_tank_capacity_l: unit?.fuel_tank_capacity_l,
+        unit_status: unit?.status,
         load_record_count: listAll('load_switch_record', r => r.drill_plan_id === p.id).length,
         fuel_record_count: listAll('fuel_level_record', r => r.drill_plan_id === p.id).length,
+        alarm_count: listAll('alarm_record', r => r.drill_plan_id === p.id).length,
+        non_compliance_count: listAll('non_compliance_item', r => r.drill_plan_id === p.id).length,
+        review_todo_count: listAll('review_todo', r => r.drill_plan_id === p.id).length,
         recovery_confirmed: listAll('recovery_record', r => r.drill_plan_id === p.id).length
     };
+}
+
+function isUnitLockedByDrill(unitId) {
+    const activeDrills = listAll('drill_plan', p =>
+        p.unit_id === unitId &&
+        (p.status === 'in_progress' || p.status === 'load_switched')
+    );
+    return activeDrills.length > 0;
+}
+
+function deleteRows(table, filter) {
+    ensure(table);
+    const before = _db[table].length;
+    _db[table] = _db[table].filter(r => !filter(r));
+    const deleted = before - _db[table].length;
+    if (deleted > 0) save();
+    return deleted;
 }
 
 initDB();
 
 module.exports = {
-    listAll, findById, findOne, insertRow, updateRows, enrichDrillPlan,
+    listAll, findById, findOne, insertRow, updateRows, deleteRows,
+    enrichDrillPlan, isUnitLockedByDrill,
     getConfig(key) {
         const c = findOne('system_config', c => c.config_key === key);
         return c ? parseFloat(c.config_value) : null;
