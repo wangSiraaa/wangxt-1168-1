@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据中心柴油发电机演练系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>数据中心柴油发电机演练系统</h1>
+            <div class="role-selector">
+                <label>当前角色：</label>
+                <select id="roleSelect">
+                    <option value="duty_operator">运维值班员</option>
+                    <option value="facility_engineer">设施工程师</option>
+                    <option value="safety_manager">安全经理</option>
+                </select>
+                <label style="margin-left: 16px;">操作员：</label>
+                <input type="text" id="operatorName" value="张工" style="width: 100px; padding: 6px;">
+            </div>
+        </header>
+
+        <nav class="nav">
+            <button class="nav-btn active" data-view="plans">演练计划</button>
+            <button class="nav-btn" data-view="units">机组管理</button>
+            <button class="nav-btn" data-view="config">系统配置</button>
+        </nav>
+
+        <main class="content">
+            <div id="view-plans" class="view active">
+                <div class="section">
+                    <div class="section-header">
+                        <h2>演练计划列表</h2>
+                        <button id="createPlanBtn" class="btn-primary">+ 新建演练计划</button>
+                    </div>
+                    <div id="planList" class="plan-list"></div>
+                </div>
+            </div>
+
+            <div id="view-units" class="view">
+                <div class="section">
+                    <div class="section-header">
+                        <h2>柴油发电机组</h2>
+                        <button id="createUnitBtn" class="btn-primary">+ 新增机组</button>
+                    </div>
+                    <div id="unitList" class="unit-list"></div>
+                </div>
+            </div>
+
+            <div id="view-config" class="view">
+                <div class="section">
+                    <h2>系统配置</h2>
+                    <div id="configList" class="config-list"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">标题</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

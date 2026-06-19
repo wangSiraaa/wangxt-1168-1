@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: wangxt_1168_1_app
+    ports:
+      - "19468:19468"
+    environment:
+      - API_PORT=19468
+      - NODE_ENV=production
+    volumes:
+      - drill_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:19468/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  drill_data:
